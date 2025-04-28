@@ -1,0 +1,20 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: authentication
+          uri: http://${AUTH_SERVICE_URL:authentication.scalerkart.svc.cluster.local:80}
+          predicates:
+            - Path=/api/authentication/**
+        - id: product
+          uri: http://${PRODUCT_SERVICE_URL:product.scalerkart.svc.cluster.local:80}
+          predicates:
+            - Path=/api/catalogue/**
+        - id: cart
+          uri: http://${CART_SERVICE_URL:cart.scalerkart.svc.cluster.local:80}
+          predicates:
+            - Path=/api/cart/**
+        - id: order
+          uri: http://${ORDER_SERVICE_URL:order.scalerkart.svc.cluster.local:80}
+          predicates:
+            - Path=/api/order/**

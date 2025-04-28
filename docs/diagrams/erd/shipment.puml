@@ -1,0 +1,47 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Shipment Service for E-commerce Application with Redis Caching
+
+entity User {
+    primary_key(user_id): UUID
+    name: String
+    email: String
+    phone_number: String
+    address: String
+}
+
+entity Order {
+    primary_key(order_id): UUID
+    foreign_key(user_id): UUID
+    order_date: DateTime
+    total_amount: Decimal
+    currency: String
+    status: Enum(Pending, Shipped, Delivered, Cancelled)
+}
+
+entity Shipment {
+    primary_key(shipment_id): UUID
+    foreign_key(order_id): UUID
+    shipment_date: DateTime
+    delivery_date: DateTime
+    carrier: String
+    tracking_number: String
+    status: Enum(Pending, InTransit, Delivered, Returned)
+}
+
+entity ShipmentCache {
+    primary_key(shipment_id): UUID
+    order_id: UUID
+    user_id: UUID
+    status: Enum(Pending, InTransit, Delivered, Returned)
+    last_updated: DateTime
+    expires_at: DateTime
+}
+
+' Relationships
+User ||--o{ Order : "places"
+Order ||--o{ Shipment : "has"
+Shipment ||--o{ ShipmentCache : "cached in"
+@enduml

@@ -1,0 +1,8 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://${MONGODB_USER:scalerkart_ecom_product}:${MONGODB_PASSWORD:scalerkart_ecom_product}@${MONGODB_HOST:34.132.188.215}:${MONGODB_PORT:27017}
+      host: ${MONGODB_HOST:34.132.188.215}
+      port: ${MONGODB_PORT:27017}
+      database: ${MONGODB_NAME:scalerkart_ecom_product}
+      auto-index-creation: true

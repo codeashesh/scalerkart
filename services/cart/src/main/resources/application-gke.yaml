@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:34.72.152.98}:${POSTGRES_PORT:5432}/${POSTGRES_DB:scalerkart_ecom_cart}
+    username: ${POSTGRES_USER:scalerkart_ecom_cart}
+    password: ${POSTGRES_PASSWORD:scalerkart_ecom_cart}
+    driverClassName: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect

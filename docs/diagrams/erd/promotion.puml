@@ -1,0 +1,43 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Product Promotion Service for E-commerce Application with Redis Caching
+' Product data is stored in MongoDB
+
+entity Discount {
+    primary_key(discount_id): UUID
+    discount_code: String
+    description: String
+    discount_type: Enum(Percentage, FixedAmount)
+    discount_value: Decimal
+    start_date: DateTime
+    end_date: DateTime
+    is_active: Boolean
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity ProductDiscount {
+    primary_key(product_discount_id): UUID
+    foreign_key(discount_id): UUID
+    product_id: ObjectId
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity ProductDiscountCache {
+    primary_key(product_id): String
+    discount_code: String
+    discount_id: UUID
+    discount_value: Decimal
+    discount_type: Enum(Percentage, FixedAmount)
+    is_active: Boolean
+    expires_at: DateTime
+    last_updated: DateTime
+}
+
+' Relationships
+Discount ||--o{ ProductDiscount : "applies to"
+ProductDiscount }o--|| ProductDiscountCache : "cached in"
+@enduml

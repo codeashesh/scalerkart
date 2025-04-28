@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  namespace: scalerkart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+        - name: order
+          image: us-central1-docker.pkg.dev/scalerkart-453310/scalerkart-artifact-registry/order:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
+          env:
+            - name: POSTGRES_HOST
+              value: "order-db.scalerkart.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: "scalerkart_ecom_order"
+            - name: POSTGRES_USER
+              value: "scalerkart_ecom_order"
+            - name: POSTGRES_PASSWORD
+              value: "scalerkart_ecom_order"
+          livenessProbe:
+            httpGet:
+              path: /api/order/health
+              port: 8083
+              httpHeaders:
+                - name: source
+                  value: k8s
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/order/health
+              port: 8083
+              httpHeaders:
+                - name: source
+                  value: k8s
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "200Mi"
+            limits:
+              cpu: "600m"
+              memory: "400Mi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: order
+  namespace: scalerkart
+spec:
+  selector:
+    app: order
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8083

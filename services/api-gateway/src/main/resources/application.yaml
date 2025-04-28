@@ -1,0 +1,52 @@
+server:
+  port: 8079
+
+spring:
+  application:
+    name: Api Gateway
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://34.45.16.98"  # Frontend domain
+            allowedMethods:
+              - "GET"
+              - "POST"
+              - "PUT"
+              - "DELETE"
+              - "OPTIONS"
+            allowedHeaders:
+              - "Authorization"
+              - "Content-Type"
+              - "Accept"
+            exposedHeaders:
+              - "Authorization"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: authentication
+          uri: http://localhost:8080
+          predicates:
+            - Path=/api/authentication/**
+        - id: product
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/catalogue/**
+        - id: cart
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/cart/**
+        - id: order
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/order/**
+  main:
+    web-application-type: reactive
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
+    org.springframework.cloud.gateway: TRACE

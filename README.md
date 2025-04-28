@@ -19,7 +19,7 @@ A Cloud-Native Microservices eCommerce Application powered by Spring Boot, React
         - [Create GKE Cluster](#722-create-gke-cluster)
         - [Create Persistent Disks](#723-create-persistent-disks)
         - [Create Regional External Static IPs in GCP](#724-create-regional-external-static-ips)
-        - [Assign IPs to API-Gateway and Frontend](#725-assign-ips-to-api-gateway-and-frontend)
+        - [Assign IP to API-Gateway](#725-assign-ip-to-api-gateway)
         - [Deploy Databases](#726-deploy-databases)
         - [Deploy Application Services](#727-deploy-application-services)
         - [Verify Deployments](#728-verify-deployments)
@@ -42,7 +42,6 @@ The **Scalerkart Application** is a cloud-native microservices-based application
 - **Cart Service**: Manages user carts and checkout processes using PostgreSQL.
 - **Order Service**: Processes and stores customer orders using PostgreSQL.
 - **API Gateway**: Acts as a unified entry point for the backend services.
-- **Frontend**: React-based UI interacting with the API Gateway.
 
 ### 1.1 Key Features
 - User authentication and authorization
@@ -63,7 +62,6 @@ The **Scalerkart Application** is a cloud-native microservices-based application
 - Build Tool: Maven
 - Architecture: Microservices
 - Backend Framework: Java 17 + Spring Boot
-- Frontend Frameworks: React
 - Database Strategies: One database per microservice
 - Social Login: Firebase
 - Relational Database Systems: PostgreSQL
@@ -93,8 +91,6 @@ The **Scalerkart Application** is a cloud-native microservices-based application
 │   ├── 📂 api-gateway
 │   │   ├── Dockerfile
 │   │   ├── pom.xml
-│   ├── 📂 frontend
-│   │   ├── Dockerfile
 │   ├── pom.xml
 ├── 📂 k8s
 │   ├── 📂 manifests
@@ -111,7 +107,6 @@ The **Scalerkart Application** is a cloud-native microservices-based application
 │   │   │   ├── cart.yaml
 │   │   │   ├── order.yaml
 │   │   │   ├── api-gateway.yaml
-│   │   │   ├── frontend.yaml
 │   ├── 📂 kind
 │   │   ├── create-cluster.sh
 ├── README.md
@@ -304,11 +299,6 @@ java -jar authentication/target/authentication-0.0.1.jar
 java -jar product/target/product-0.0.1.jar
 java -jar cart/target/cart-0.0.1.jar
 java -jar order/target/order-0.0.1.jar
-
-# Start Frontend
-cd frontend
-npm install
-npm start
 ```
 
 ### 7.2 GKE Setup
@@ -363,26 +353,19 @@ gcloud compute disks create scalerkart-product-persistent-disk --size=5GB --zone
 ```
 
 #### 7.2.4 Create Regional External Static IPs
-To enable **consistent IP addresses**, we allocate **static IPs** for **Frontend** and **API Gateway**.
+To enable **consistent IP addresses**, we allocate **static IPs** for **API Gateway**.
 
 ```bash
 gcloud compute addresses create api-gateway-ip --region=us-central1
-gcloud compute addresses create frontend-ip --region=us-central1
 ```
 Verify allocated IPs:
 ```bash
 gcloud compute addresses list
 ```
 
-#### 7.2.5 Assign IPs to API-Gateway and Frontend
-Modify `api-gateway.yaml` and `frontend.yaml` in `k8s/manifests/services/` to **assign static IPs**.
+#### 7.2.5 Assign IP to API-Gateway
+Modify `api-gateway.yaml` in `k8s/manifests/services/` to **assign static IPs**.
 
-Example for **frontend.yaml**:
-```yaml
-spec:
-  type: LoadBalancer
-  loadBalancerIP: 34.45.16.98
-```
 Example for **api-gateway.yaml**:
 ```yaml
 spec:
@@ -407,13 +390,12 @@ kubectl apply -f k8s/manifests/infrastructure/db/
 
 #### 7.2.7 Deploy Application Services
 ##### **Apply Kubernetes Manifests**
-Deploy backend services including **API Gateway, Authentication, Product, Cart, Order, and Frontend**.
+Deploy backend services including **API Gateway, Authentication, Product, Cart and Order**.
 
 ```bash
 kubectl apply -f k8s/manifests/services/
 ```
 This command deploys:
-- **Frontend Service** (React + Nginx)
 - **API Gateway Service** (Routes backend requests)
 - **Authentication Service** (User authentication)
 - **Product Service** (Product catalog, MongoDB)
@@ -435,8 +417,6 @@ pod/auth-db-0                        1/1     Running   0          9h
 pod/authentication-98b55c5fc-ss8js   1/1     Running   0          8h
 pod/cart-7497bb8f95-fjz22            1/1     Running   0          8h
 pod/cart-db-0                        1/1     Running   0          9h
-pod/frontend-7c8d45fb5f-l7zbd        1/1     Running   0          145m
-pod/frontend-7c8d45fb5f-shznr        1/1     Running   0          141m
 pod/order-6485c6cbbb-9kfr8           1/1     Running   0          8h
 pod/order-db-0                       1/1     Running   0          9h
 pod/product-78bd97b56b-bq52l         1/1     Running   0          8h
@@ -448,7 +428,6 @@ service/auth-db          ClusterIP      None             <none>           5432/T
 service/authentication   ClusterIP      34.118.227.8     <none>           80/TCP         9h
 service/cart             ClusterIP      34.118.226.239   <none>           80/TCP         9h
 service/cart-db          ClusterIP      None             <none>           5432/TCP       9h
-service/frontend         LoadBalancer   34.118.238.239   34.45.16.98      80:32041/TCP   9h
 service/order            ClusterIP      34.118.232.65    <none>           80/TCP         9h
 service/order-db         ClusterIP      None             <none>           5432/TCP       9h
 service/product          ClusterIP      34.118.228.155   <none>           80/TCP         9h
@@ -458,7 +437,6 @@ NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/api-gateway      1/1     1            1           9h
 deployment.apps/authentication   1/1     1            1           9h
 deployment.apps/cart             1/1     1            1           9h
-deployment.apps/frontend         2/2     2            2           9h
 deployment.apps/order            1/1     1            1           9h
 deployment.apps/product          1/1     1            1           9h
 deployment.apps/product-db       1/1     1            1           9h
@@ -467,7 +445,6 @@ NAME                                       DESIRED   CURRENT   READY   AGE
 replicaset.apps/api-gateway-5bb6b978d      1         1         1       8h
 replicaset.apps/authentication-98b55c5fc   1         1         1       8h
 replicaset.apps/cart-7497bb8f95            1         1         1       8h
-replicaset.apps/frontend-7c8d45fb5f        2         2         2       145m
 replicaset.apps/order-6485c6cbbb           1         1         1       8h
 replicaset.apps/product-78bd97b56b         1         1         1       8h
 replicaset.apps/product-db-68884fd4f       1         1         1       9h

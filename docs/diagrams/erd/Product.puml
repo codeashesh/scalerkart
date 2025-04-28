@@ -1,0 +1,28 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Product Service for E-commerce Application
+
+entity ProductMedia {
+    primary_key(media_id): UUID
+    product_id: ObjectId
+    media_type: Enum(Image, Video, Thumbnail)
+    media_url: String
+    uploaded_at: DateTime
+    cloud_storage_id: String
+}
+
+entity ProductAnalytics {
+    primary_key(analytics_id): UUID
+    product_id: ObjectId
+    views: Integer
+    purchases: Integer
+    ratings: Decimal
+    reviews_count: Integer
+    last_updated: DateTime
+}
+
+' Relationships
+ProductMedia ||--o{ ProductAnalytics : "tracked by"
+@enduml

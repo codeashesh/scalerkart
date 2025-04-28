@@ -1,0 +1,61 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Product Search Service for E-commerce Application with Elastic Database Optimization
+
+entity ProductIndex {
+    primary_key(product_id): ObjectId
+    name: String
+    description: Text
+    price: Decimal
+    currency: String
+    category: String
+    subcategory: String
+    stock_quantity: Integer
+    is_active: Boolean
+    created_at: DateTime
+    updated_at: DateTime
+    keywords: String
+    popularity_score: Decimal
+    elastic_document_id: String
+    images: List<String>
+    videos: List<String>
+    thumbnails: List<String>
+}
+
+entity SearchLog {
+    primary_key(log_id): UUID
+    search_query: String
+    user_id: UUID
+    search_timestamp: DateTime
+    results_count: Integer
+    filters_applied: String
+    elastic_search_id: String
+}
+
+entity SearchSuggestion {
+    primary_key(suggestion_id): UUID
+    search_query: String
+    suggested_query: String
+    frequency: Integer
+    last_updated: DateTime
+    elastic_suggestion_id: String
+}
+
+entity ProductAnalytics {
+    primary_key(analytics_id): UUID
+    foreign_key(product_id): ObjectId
+    views: Integer
+    purchases: Integer
+    ratings: Decimal
+    reviews_count: Integer
+    last_updated: DateTime
+    elastic_analytics_id: String
+}
+
+' Relationships
+ProductIndex ||--o{ ProductAnalytics : "tracked by"
+ProductIndex ||--o{ SearchLog : "referenced in"
+ProductIndex ||--o{ SearchSuggestion : "used in"
+@enduml

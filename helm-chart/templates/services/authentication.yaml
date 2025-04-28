@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-authentication
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Chart.Name }}-authentication
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-authentication
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-authentication
+    spec:
+      containers:
+          - name: authentication
+            image: "{{ .Values.global.imageRegistry }}/{{ .Values.services.authentication.image }}:{{ .Values.services.authentication.tag }}"
+            imagePullPolicy: Always
+            ports:
+              - containerPort: {{ .Values.services.authentication.port }}
+            env:
+              - name: POSTGRES_HOST
+                value: "{{ .Chart.Name }}-postgresql.{{ .Values.global.namespace }}.svc.cluster.local"
+              - name: POSTGRES_DB
+                value: "{{ .Values.postgresql.global.postgresql.auth.database }}_{{ .Values.services.authentication.dbName }}"
+              - name: POSTGRES_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Chart.Name }}-postgresql
+                    key: postgresql-username
+              - name: POSTGRES_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Chart.Name }}-postgresql
+                    key: postgresql-password
+            livenessProbe:
+              httpGet:
+                path: /api/authentication/health
+                port: {{ .Values.services.authentication.port }}
+            {{- toYaml .Values.probes.liveness | nindent 12 }}
+            readinessProbe:
+              httpGet:
+                path: /api/authentication/health
+                port: {{ .Values.services.authentication.port }}
+            {{- toYaml .Values.probes.readiness | nindent 12 }}
+            resources:
+              {{- toYaml .Values.services.authentication.resources | nindent 12 }}

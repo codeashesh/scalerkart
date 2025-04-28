@@ -1,0 +1,42 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Cart Service for E-commerce Application with Redis Caching
+
+entity Cart {
+    primary_key(cart_id): UUID
+    foreign_key(user_id): UUID
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity CartItem {
+    primary_key(cart_item_id): UUID
+    foreign_key(cart_id): UUID
+    product_id: ObjectId
+    quantity: Integer
+    price: Decimal
+    currency: String
+    added_at: DateTime
+    updated_at: DateTime
+}
+
+entity ProductAvailabilityCache {
+    primary_key(product_id): ObjectId
+    stock_quantity: Integer
+    is_active: Boolean
+    last_checked: DateTime
+}
+
+entity User {
+    primary_key(user_id): UUID
+    name: String
+    email: String
+}
+
+
+' Relationships
+User ||--o{ Cart : "owns"
+Cart ||--o{ CartItem : "contains"
+@enduml

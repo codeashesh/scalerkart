@@ -1,0 +1,47 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /api/order
+
+spring:
+  application:
+    name: "Order Service"
+  datasource:
+    url: "jdbc:h2:file:~/h2/scalerkart_ecom_order;DB_CLOSE_ON_EXIT=TRUE"
+    username: "scalerkart_ecom_order"
+    password: "scalerkart_ecom_order"
+    driverClassName: "org.h2.Driver"
+  jpa:
+    database-platform: "org.hibernate.dialect.H2Dialect"
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: "org.hibernate.dialect.H2Dialect"
+        use_sql_comments: true
+        format_sql: false
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+jwt:
+  secret: "scalerkart-2024-2025-ecommerce-project-token-secret-for-ashesh"
+  expiration: 86400
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+springdoc:
+  swagger-ui:
+    path: "/swagger-ui.html"

@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: auth-db-pv
+  namespace: scalerkart
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  gcePersistentDisk:
+    pdName: scalerkart-auth-persistent-disk
+    fsType: ext4
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: auth-db
+  namespace: scalerkart
+spec:
+  serviceName: auth-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-db
+  template:
+    metadata:
+      labels:
+        app: auth-db
+    spec:
+      containers:
+        - name: auth-db
+          image: postgres:15
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5432
+              name: auth-db
+          env:
+            - name: POSTGRES_HOST
+              value: "auth-db.scalerkart.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: "scalerkart_ecom_auth"
+            - name: POSTGRES_USER
+              value: "scalerkart_ecom_auth"
+            - name: POSTGRES_PASSWORD
+              value: "scalerkart_ecom_auth"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: auth-db-storage
+              subPath: postgres
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "200Mi"
+            limits:
+              cpu: "600m"
+              memory: "400Mi"
+  volumeClaimTemplates:
+    - metadata:
+        name: auth-db-storage
+        namespace: scalerkart
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: standard
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-db
+  namespace: scalerkart
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: auth-db
+  clusterIP: None
+  selector:
+    app: auth-db

@@ -1,0 +1,49 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Notification Service for E-commerce Application with Redis Caching
+
+entity User {
+    primary_key(user_id): UUID
+    name: String
+    email: String
+    phone_number: String
+    push_token: String
+    whatsapp_number: String
+}
+
+entity Notification {
+    primary_key(notification_id): UUID
+    foreign_key(user_id): UUID
+    notification_type: Enum(SMS, Email, Push, WhatsApp)
+    message_content: Text
+    status: Enum(Pending, Sent, Failed)
+    created_at: DateTime
+    sent_at: DateTime
+}
+
+entity NotificationTemplate {
+    primary_key(template_id): UUID
+    template_name: String
+    notification_type: Enum(SMS, Email, Push, WhatsApp)
+    subject: String
+    body: Text
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity NotificationCache {
+    primary_key(notification_id): UUID
+    user_id: UUID
+    notification_type: Enum(SMS, Email, Push, WhatsApp)
+    message_content: Text
+    status: Enum(Pending, Sent, Failed)
+    expires_at: DateTime
+}
+
+' Relationships
+User ||--o{ Notification : "receives"
+NotificationTemplate ||--o{ Notification : "uses"
+Notification ||--o{ NotificationCache : "cached in"
+@enduml

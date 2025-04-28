@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product
+  namespace: scalerkart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      containers:
+        - name: product
+          image: us-central1-docker.pkg.dev/scalerkart-453310/scalerkart-artifact-registry/product:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          env:
+            - name: MONGODB_HOST
+              value: "product-db.scalerkart.svc.cluster.local"
+            - name: MONGODB_PORT
+              value: "27017"
+            - name: MONGODB_NAME
+              value: "scalerkart_ecom_product"
+            - name: MONGODB_USER
+              value: "scalerkart_ecom_product"
+            - name: MONGODB_PASSWORD
+              value: "scalerkart_ecom_product"
+          livenessProbe:
+            httpGet:
+              path: /api/catalogue/health
+              port: 8081
+              httpHeaders:
+                - name: source
+                  value: k8s
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/catalogue/health
+              port: 8081
+              httpHeaders:
+                - name: source
+                  value: k8s
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "200Mi"
+            limits:
+              cpu: "600m"
+              memory: "400Mi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: product
+  namespace: scalerkart
+spec:
+  selector:
+    app: product
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8081

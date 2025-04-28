@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scalerkart-ingress
+  namespace: scalerkart
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "scalerkart-ingress-global-ip"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api/authentication
+            pathType: Prefix
+            backend:
+              service:
+                name: authentication
+                port:
+                  number: 80
+          - path: /api/cart
+            pathType: Prefix
+            backend:
+              service:
+                name: cart
+                port:
+                  number: 80
+          - path: /api/order
+            pathType: Prefix
+            backend:
+              service:
+                name: order
+                port:
+                  number: 80
+          - path: /api/product
+            pathType: Prefix
+            backend:
+              service:
+                name: product
+                port:
+                  number: 80

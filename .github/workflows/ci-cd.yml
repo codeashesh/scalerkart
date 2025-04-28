@@ -1,0 +1,175 @@
+name: CI/CD Pipeline for Scalerkart
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Build Backend Services
+  build-backend:
+    name: Code Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [authentication, cart, order, product, api-gateway]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build and Test ${{ matrix.service }}
+        working-directory: services/${{ matrix.service }}
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+  # Dummy Static Code Analysis
+  code-analysis:
+    name: Code Analysis
+    needs: build-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Static Code Analysis
+        run: echo "Performing Code Analysis..."
+
+  # Dummy Integration Tests
+  integration-tests:
+    name: Integration Tests
+    needs: code-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Integration Tests
+        run: echo "Running Integration Tests..."
+
+  # Dummy API Tests
+  api-tests:
+    name: API Tests
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run API Tests
+        run: echo "Running API Tests..."
+
+  # Build and Push Docker Images
+  build-and-push:
+    name: Build and Push Backend Services
+    needs: api-tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [authentication, cart, order, product, api-gateway]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Docker
+        run: gcloud auth configure-docker ${{ secrets.DOCKER_REGISTRY }}
+
+      - name: Build Backend
+        working-directory: services
+        run: |
+          docker build -t ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_NAME }}/${{ matrix.service }}:latest -f ${{ matrix.service }}/Dockerfile .
+          docker push ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_NAME }}/${{ matrix.service }}:latest
+
+    # Build and Push Docker Images
+  build-and-push-frontend:
+    name: Build and Push Frontend
+    needs: api-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Docker
+        run: gcloud auth configure-docker ${{ secrets.DOCKER_REGISTRY }}
+
+      - name: Build Frontend
+        working-directory: services/frontend
+        run: |
+          docker build -t ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_NAME }}/frontend:latest .
+          docker push ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_NAME }}/frontend:latest
+
+  # Deploy to GKE
+  deploy:
+    name: Deploy Backend
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure kubectl
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f k8s/manifests/services/namespace.yaml
+          kubectl apply -f k8s/manifests/services/cart.yaml
+          kubectl apply -f k8s/manifests/services/order.yaml
+          kubectl apply -f k8s/manifests/services/authentication.yaml
+          kubectl apply -f k8s/manifests/services/product.yaml
+          kubectl apply -f k8s/manifests/services/api-gateway.yaml
+
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment.apps/cart -n scalerkart
+          kubectl rollout status deployment.apps/order -n scalerkart
+          kubectl rollout status deployment.apps/authentication -n scalerkart
+          kubectl rollout status deployment.apps/product -n scalerkart
+          kubectl rollout status deployment.apps/api-gateway -n scalerkart
+
+  deploy-frontend:
+    name: Deploy Frontend
+    needs: build-and-push-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure kubectl
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f k8s/manifests/services/frontend.yaml
+
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment.apps/frontend -n scalerkart

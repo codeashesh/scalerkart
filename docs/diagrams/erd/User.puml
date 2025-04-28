@@ -1,0 +1,81 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' User Service for E-commerce Application
+
+entity User {
+    primary_key(user_id): UUID
+    full_name: String
+    email: String
+    phone_number: String
+    date_of_birth: Date
+    created_at: DateTime
+    updated_at: DateTime
+    status: Enum(Active, Inactive, Suspended)
+}
+
+entity UserPreferences {
+    primary_key(preference_id): UUID
+    foreign_key(user_id): UUID
+    preference_key: String
+    preference_value: String
+    updated_at: DateTime
+}
+
+entity WishList {
+    primary_key(wishlist_id): UUID
+    foreign_key(user_id): UUID
+    product_id: ObjectId
+    added_at: DateTime
+}
+
+entity UserAnalytics {
+    primary_key(analytics_id): UUID
+    foreign_key(user_id): UUID
+    last_login: DateTime
+    total_orders: Integer
+    total_spent: Decimal
+    last_updated: DateTime
+}
+
+entity Address {
+    primary_key(address_id): UUID
+    foreign_key(user_id): UUID
+    address_line_1: String
+    address_line_2: String
+    city: String
+    state: String
+    country: String
+    postal_code: String
+    is_primary: Boolean
+    created_at: DateTime
+}
+
+entity NotificationSettings {
+    primary_key(setting_id): UUID
+    foreign_key(user_id): UUID
+    email_notifications: Boolean
+    sms_notifications: Boolean
+    push_notifications: Boolean
+    updated_at: DateTime
+}
+
+entity PaymentMethods {
+    primary_key(payment_id): UUID
+    foreign_key(user_id): UUID
+    card_type: Enum(Visa, MasterCard, AmEx, Other)
+    last_four_digits: String
+    expiry_date: Date
+    is_primary: Boolean
+    created_at: DateTime
+}
+
+' Relationships
+User ||--o{ UserPreferences : "has"
+User ||--o{ WishList : "creates"
+User ||--o{ UserAnalytics : "tracked by"
+User ||--o{ Address : "has"
+User ||--o{ NotificationSettings : "manages"
+User ||--o{ PaymentMethods : "uses"
+@enduml

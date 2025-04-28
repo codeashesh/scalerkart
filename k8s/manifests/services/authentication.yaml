@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication
+  namespace: scalerkart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentication
+  template:
+    metadata:
+      labels:
+        app: authentication
+    spec:
+      containers:
+        - name: authentication
+          image: us-central1-docker.pkg.dev/scalerkart-453310/scalerkart-artifact-registry/authentication:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: POSTGRES_HOST
+              value: "auth-db.scalerkart.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: "scalerkart_ecom_auth"
+            - name: POSTGRES_USER
+              value: "scalerkart_ecom_auth"
+            - name: POSTGRES_PASSWORD
+              value: "scalerkart_ecom_auth"
+          livenessProbe:
+            httpGet:
+              path: /api/authentication/health
+              port: 8080
+              httpHeaders:
+                - name: source
+                  value: k8s
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/authentication/health
+              port: 8080
+              httpHeaders:
+                - name: source
+                  value: k8s
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "200Mi"
+            limits:
+              cpu: "600m"
+              memory: "400Mi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication
+  namespace: scalerkart
+spec:
+  selector:
+    app: authentication
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

@@ -1,0 +1,12 @@
+apiVersion: v2
+name: scalerkart
+description: A Helm chart for scalerkart Application
+version: 1.0.0
+appVersion: 1.0.0
+dependencies:
+  - name: postgresql
+    version: 12.1.2
+    repository: https://charts.bitnami.com/bitnami
+  - name: mongodb
+    version: 13.6.0
+    repository: https://charts.bitnami.com/bitnami

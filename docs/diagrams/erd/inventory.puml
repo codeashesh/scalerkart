@@ -1,0 +1,41 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Product Inventory Service for E-commerce Application with Redis Caching
+' Product data is stored in MongoDB
+
+entity Inventory {
+    primary_key(inventory_id): UUID
+    product_id: ObjectId
+    warehouse_id: UUID
+    quantity_in_stock: Integer
+    reorder_level: Integer
+    last_restocked: DateTime
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity Warehouse {
+    primary_key(warehouse_id): UUID
+    name: String
+    location: String
+    capacity: Integer
+    manager: String
+    contact_number: String
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity InventoryCache {
+    primary_key(product_id): ObjectId
+    warehouse_id: UUID
+    quantity_in_stock: Integer
+    last_checked: DateTime
+    expires_at: DateTime
+}
+
+' Relationships
+Warehouse ||--o{ Inventory : "stores"
+Inventory ||--o{ InventoryCache : "cached in"
+@enduml

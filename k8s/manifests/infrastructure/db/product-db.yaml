@@ -1,0 +1,123 @@
+# Persistent Volume (PV) - Stores MongoDB Data
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: product-db-pv
+  namespace: scalerkart
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: "standard"
+  gcePersistentDisk:
+    pdName: scalerkart-product-persistent-disk
+    fsType: ext4
+
+---
+# Persistent Volume Claim (PVC) - Requests Storage from PV
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: product-db-pvc
+  namespace: scalerkart
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: "standard"
+
+---
+# Secret - Stores MongoDB Credentials Securely
+apiVersion: v1
+kind: Secret
+metadata:
+  name: product-db-secrets
+  namespace: scalerkart
+type: Opaque
+data:
+  MONGO_INITDB_ROOT_PASSWORD: "bmFncF9lY29tX3Byb2R1Y3Q="  # Base64 encoded 'scalerkart_ecom_product'
+
+---
+# ConfigMap - Stores Non-Sensitive MongoDB Configurations
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-db-config
+  namespace: scalerkart
+data:
+  MONGO_INITDB_ROOT_USERNAME: "scalerkart_ecom_product"
+  MONGO_INITDB_DATABASE: "scalerkart_ecom_product"
+
+---
+# MongoDB Deployment - Creates a StatefulSet for MongoDB
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-db
+  namespace: scalerkart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-db
+  template:
+    metadata:
+      labels:
+        app: product-db
+    spec:
+      containers:
+        - name: product-db
+          image: mongo:7.0.7
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: MONGO_INITDB_ROOT_USERNAME
+                  name: product-db-config
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: MONGO_INITDB_ROOT_PASSWORD
+                  name: product-db-secrets
+            - name: MONGO_INITDB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  key: MONGO_INITDB_DATABASE
+                  name: product-db-config
+          volumeMounts:
+            - name: product-db-data
+              mountPath: /data/db
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "500Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1000Mi"
+      volumes:
+        - name: product-db-data
+          persistentVolumeClaim:
+            claimName: product-db-pvc
+
+---
+# MongoDB Service - Exposes MongoDB Inside Cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-db
+  namespace: scalerkart
+spec:
+  selector:
+    app: product-db
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+  clusterIP: None

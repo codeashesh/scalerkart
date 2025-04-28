@@ -1,0 +1,90 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' User service to store user details
+together {
+    entity User {
+        primary_key(user_id): UUID
+        full_name: String
+        email: String
+        phone_number: String
+        created_at: DateTime
+        updated_at: DateTime
+        status: Enum(Active, Inactive, Suspended)
+    }
+
+    entity Role {
+        primary_key(role_id): UUID
+        role_name: String
+        description: String
+    }
+
+    entity UserRole {
+        primary_key(user_role_id): UUID
+        foreign_key(user_id): UUID
+        foreign_key(role_id): UUID
+        assigned_at: DateTime
+    }
+}
+
+' Social Sign-In (Google, GitHub, Facebook)
+entity SocialLogin {
+    primary_key(social_login_id): UUID
+    foreign_key(user_id): UUID
+    provider: Enum(Google, GitHub, Facebook)
+    provider_user_id: String
+    connected_at: DateTime
+}
+
+' Mobile Sign-In (OTP-based)
+entity MobileLogin {
+    primary_key(mobile_login_id): UUID
+    foreign_key(user_id): UUID
+    otp: String
+    otp_created_at: DateTime
+    otp_expiry: DateTime
+}
+
+' Email/Username and Password Sign-In
+entity EmailLogin {
+    primary_key(email_login_id): UUID
+    foreign_key(user_id): UUID
+    email: String
+    password_hash: String
+    last_login: DateTime
+}
+
+' Firebase Authentication Integration
+entity FirebaseConnection {
+    primary_key(firebase_id): UUID
+    foreign_key(user_id): UUID
+    firebase_uid: String
+    connected_at: DateTime
+}
+
+' Caching Layer for faster authentication and role retrieval
+entity UserAndRoleCache {
+    user_id: UUID
+    cache_type: Enum(UserDetails, Roles)
+    data: String
+ }
+
+' Login History for audit purposes
+entity LoginHistory {
+    primary_key(login_id): UUID
+    foreign_key(user_id): UUID
+    login_timestamp: DateTime
+    logout_timestamp: DateTime
+    ip_address: String
+}
+
+' Relationships
+User ||--o{ UserRole : "has"
+Role ||--o{ UserRole : "assigned to"
+User ||--o{ LoginHistory : "records"
+User ||--o{ FirebaseConnection : "connected through"
+User ||--o{ SocialLogin : "via"
+User ||--o{ MobileLogin : "uses"
+User ||--o{ EmailLogin : "via"
+@enduml

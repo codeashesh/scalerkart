@@ -1,0 +1,39 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Order Service for E-commerce Application
+
+entity Order {
+    primary_key(order_id): UUID
+    foreign_key(user_id): UUID
+    total_amount: Decimal
+    currency: String
+    order_status: Enum(Pending, Confirmed, Shipped, Delivered, Cancelled)
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity OrderItem {
+    primary_key(order_item_id): UUID
+    foreign_key(order_id): UUID
+    product_id: ObjectId
+    quantity: Integer
+    price: Decimal
+    currency: String
+    is_available: Boolean
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity User {
+    primary_key(user_id): UUID
+    name: String
+    email: String
+    phone_number: String
+}
+
+' Relationships
+User ||--o{ Order : "places"
+Order ||--o{ OrderItem : "contains"
+@enduml

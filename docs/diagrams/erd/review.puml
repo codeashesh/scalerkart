@@ -1,0 +1,43 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Product Review Service for E-commerce Application with Redis Caching
+' Product data is stored in MongoDB
+
+entity User {
+    primary_key(user_id): UUID
+    name: String
+    email: String
+}
+
+entity Review {
+    primary_key(review_id): UUID
+    foreign_key(user_id): UUID
+    product_id: ObjectId
+    rating: Integer
+    review_text: Text
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity Media {
+    primary_key(media_id): UUID
+    foreign_key(review_id): UUID
+    media_type: Enum(Image, Video)
+    media_url: String
+    uploaded_at: DateTime
+}
+
+entity ReviewCache {
+    primary_key(product_id): ObjectId
+    average_rating: Float
+    review_count: Integer
+    last_updated: DateTime
+}
+
+' Relationships
+User ||--o{ Review : "writes"
+Review ||--o{ Media : "includes"
+ReviewCache ||--o{ Review : "aggregates"
+@enduml

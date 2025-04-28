@@ -1,0 +1,29 @@
+@startuml
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+
+' Payment Service for E-commerce Application
+
+entity Payment {
+    primary_key(payment_id): UUID
+    foreign_key(order_id): UUID
+    amount: Decimal
+    currency: String
+    payment_method: String
+    payment_status: Enum(Pending, Completed, Failed)
+    transaction_id: String
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+entity PaymentNotification {
+    primary_key(notification_id): UUID
+    foreign_key(payment_id): UUID
+    notification_type: Enum(Email, SMS, Push)
+    status: Enum(Pending, Sent, Failed)
+    sent_at: DateTime
+}
+
+' Relationships
+Payment ||--o{ PaymentNotification : "triggers"
+@enduml
