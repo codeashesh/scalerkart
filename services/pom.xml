@@ -32,18 +32,18 @@
       <name>Ashesh Sarraf</name>
       <email>mailtoashesh@gmail.com</email>
       <organization>Scaler</organization>
-      <organizationUrl>http://34.45.16.98/</organizationUrl>
+      <organizationUrl>https://www.scaler.com/</organizationUrl>
       <roles>
-        <role>Staff Engineer</role>
+        <role>Student</role>
       </roles>
     </developer>
   </developers>
 
   <scm>
-    <connection>scm:git:https://github.com/codeashesh/ecommerce-repo.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/codeashesh/ecommerce-repo.git</developerConnection>
+    <connection>scm:git:https://github.com/codeashesh/scalerkart.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/codeashesh/scalerkart.git</developerConnection>
     <tag>HEAD</tag>
-    <url>https://github.com/codeashesh/ecommerce-repo</url>
+    <url>https://github.com/codeashesh/scalerkart</url>
   </scm>
 
   <modules>
